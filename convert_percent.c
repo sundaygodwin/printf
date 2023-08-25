@@ -1,103 +1,108 @@
 #include "main.h"
 
-unsigned int convert_c(va_list args, buffer_t *output,
-		unsigned char flags, int wid, int prec, unsigned char len);
-unsigned int convert_percent(va_list args, buffer_t *output,
-		unsigned char flags, int wid, int prec, unsigned char len);
-unsigned int convert_p(va_list args, buffer_t *output,
-		unsigned char flags, int wid, int prec, unsigned char len);
-
 /**
- * convert_c - Converts an argument to an unsigned char and
- *             stores it to a buffer contained in a struct.
- * @args: A va_list pointing to the argument to be converted.
- * @flags: Flag modifiers.
- * @wid: A width modifier.
- * @prec: A precision modifier.
- * @len: A length modifier.
- * @output: A buffer_t struct containing a character array.
- *
- * Return: The number of bytes stored to the buffer.
+ * print_bigS - Non printable characters
+ * (0 < ASCII value < 32 or >= 127) are
+ * printed this way: \x, followed by the ASCII code
+ * value in hexadecimal (upper case - always 2 characters)
+ * @l: va_list arguments from _printf
+ * @f: pointer to the struct flags that determines
+ * if a flag is passed to _printf
+ * Return: number of char printed
  */
-unsigned int convert_c(va_list args, buffer_t *output,
-		unsigned char flags, int wid, int prec, unsigned char len)
-
+int print_bigS(va_list l, flags_t *f)
 {
-	char c;
-	unsigned int ret = 0;
+	int i, count = 0;
+	char *res;
+	char *s = va_arg(l, char *);
 
-	(void)prec;
-	(void)len;
+	(void)f;
+	if (!s)
+		return (_puts("(null)"));
 
-	c = va_arg(args, int);
-
-	ret += print_width(output, ret, flags, wid);
-	ret += _memcpy(output, &c, 1);
-	ret += print_neg_width(output, ret, flags, wid);
-
-	return (ret);
+	for (i = 0; s[i]; i++)
+	{
+		if (s[i] > 0 && (s[i] < 32 || s[i] >= 127))
+		{
+			_puts("\\x");
+			count += 2;
+			res = convert(s[i], 16, 0);
+			if (!res[1])
+				count += _putchar('0');
+			count += _puts(res);
+		}
+		else
+			count += _putchar(s[i]);
+	}
+	return (count);
 }
 
 /**
- * convert_percent - Stores a percent sign to a
- *                   buffer contained in a struct.
- * @args: A va_list pointing to the argument to be converted.
- * @flags: Flag modifiers.
- * @wid: A width modifier.
- * @prec: A precision modifier.
- * @len: A length modifier.
- * @output: A buffer_t struct containing a character array.
- *
- * Return: The number of bytes stored to the buffer (always 1).
+ * print_rev - prints a string in reverse
+ * @l: argument from _printf
+ * @f: pointer to the struct flags that determines
+ * if a flag is passed to _printf
+ * Return: length of the printed string
  */
-unsigned int convert_percent(va_list args, buffer_t *output,
-		unsigned char flags, int wid, int prec, unsigned char len)
-
+int print_rev(va_list l, flags_t *f)
 {
-	char percent = '%';
-	unsigned int ret = 0;
+	int i = 0, j;
+	char *s = va_arg(l, char *);
 
-	(void)args;
-	(void)prec;
-	(void)len;
+	(void)f;
+	if (!s)
+		s = "(null)";
 
-	ret += print_width(output, ret, flags, wid);
-	ret += _memcpy(output, &percent, 1);
-	ret += print_neg_width(output, ret, flags, wid);
+	while (s[i])
+		i++;
 
-	return (ret);
+	for (j = i - 1; j >= 0; j--)
+		_putchar(s[j]);
+
+	return (i);
 }
 
 /**
- * convert_p - Converts the address of an argument to hex and
- *             stores it to a buffer contained in a struct.
- * @args: A va_list pointing to the argument to be converted.
- * @flags: Flag modifiers.
- * @wid: A width modifier.
- * @prec: A precision modifier.
- * @len: A length modifier.
- * @output: A buffer_t struct containing a character array.
- *
- * Return: The number of bytes stored to the buffer.
+ * print_rot13 - prints a string using rot13
+ * @l: list of arguments from _printf
+ * @f: pointer to the struct flags that determines
+ * if a flag is passed to _printf
+ * Return: length of the printed string
  */
-unsigned int convert_p(va_list args, buffer_t *output,
-		unsigned char flags, int wid, int prec, unsigned char len)
-
+int print_rot13(va_list l, flags_t *f)
 {
-	char *null = "(nil)";
-	unsigned long int address;
-	unsigned int ret = 0;
+	int i, j;
+	char rot13[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+	char ROT13[] = "nopqrstuvwxyzabcdefghijklmNOPQRSTUVWXYZABCDEFGHIJKLM";
+	char *s = va_arg(l, char *);
 
-	(void)len;
+	(void)f;
+	for (j = 0; s[j]; j++)
+	{
+		if (s[j] < 'A' || (s[j] > 'Z' && s[j] < 'a') || s[j] > 'z')
+			_putchar(s[j]);
+		else
+		{
+			for (i = 0; i <= 52; i++)
+			{
+				if (s[j] == rot13[i])
+					_putchar(ROT13[i]);
+			}
+		}
+	}
 
-	address = va_arg(args, unsigned long int);
-	if (address == '\0')
-		return (_memcpy(output, null, 5));
+	return (j);
+}
 
-	flags |= 32;
-	ret += convert_ubase(output, address, "0123456789abcdef",
-			flags, wid, prec);
-	ret += print_neg_width(output, ret, flags, wid);
-
-	return (ret);
+/**
+ * print_percent - prints a percent
+ * @l: va_list arguments from _printf
+ * @f: pointer to the struct flags in which we turn the flags on
+ * Return: number of char printed
+ */
+int print_percent(va_list l, flags_t *f)
+{
+	(void)l;
+	(void)f;
+	return (_putchar('%'));
 }

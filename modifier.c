@@ -1,84 +1,39 @@
 #include "main.h"
 
-unsigned int print_width(buffer_t *output, unsigned int printed,
-		unsigned char flags, int wid);
-unsigned int print_string_width(buffer_t *output,
-		unsigned char flags, int wid, int prec, int size);
-unsigned int print_neg_width(buffer_t *output, unsigned int printed,
-		unsigned char flags, int wid);
-
 /**
- * print_width - Stores leading spaces to a buffer for a width modifier.
- * @output: A buffer_t struct containing a character array.
- * @printed: The current number of characters already printed to output
- *           for a given number specifier.
- * @flags: Flag modifiers.
- * @wid: A width modifier.
- *
- * Return: The number of bytes stored to the buffer.
+ * get_print - selects the right printing function
+ * depending on the conversion specifier passed to _printf
+ * @s: character that holds the conversion specifier
+ * Description: the function loops through the structs array
+ * func_arr[] to find a match between the specifier passed to _printf
+ * and the first element of the struct, and then the approriate
+ * printing function
+ * Return: a pointer to the matching printing function
  */
-unsigned int print_width(buffer_t *output, unsigned int printed,
-		unsigned char flags, int wid)
+int (*get_print(char s))(va_list, flags_t *)
 {
-	unsigned int ret = 0;
-	char width = ' ';
+	ph func_arr[] = {
+		{'i', print_int},
+		{'s', print_string},
+		{'c', print_char},
+		{'d', print_int},
+		{'u', print_unsigned},
+		{'x', print_hex},
+		{'X', print_hex_big},
+		{'b', print_binary},
+		{'o', print_octal},
+		{'R', print_rot13},
+		{'r', print_rev},
+		{'S', print_bigS},
+		{'p', print_address},
+		{'%', print_percent}
+		};
+	int flags = 14;
 
-	if (NEG_FLAG == 0)
-	{
-		for (wid -= printed; wid > 0;)
-			ret += _memcpy(output, &width, 1);
-	}
+	register int i;
 
-	return (ret);
-}
-
-/**
- * print_string_width - Stores leading spaces to a buffer for a width modifier.
- * @output: A buffer_t struct containing a character array.
- * @flags: Flag modifiers.
- * @wid: A width modifier.
- * @prec: A precision modifier.
- * @size: The size of the string.
- *
- * Return: The number of bytes stored to the buffer.
- */
-unsigned int print_string_width(buffer_t *output,
-		unsigned char flags, int wid, int prec, int size)
-{
-	unsigned int ret = 0;
-	char width = ' ';
-
-	if (NEG_FLAG == 0)
-	{
-		wid -= (prec == -1) ? size : prec;
-		for (; wid > 0; wid--)
-			ret += _memcpy(output, &width, 1);
-	}
-
-	return (ret);
-}
-
-/**
- * print_neg_width - Stores trailing spaces to a buffer for a '-' flag.
- * @output: A buffer_t struct containing a character array.
- * @printed: The current number of bytes already stored to output
- *           for a given specifier.
- * @flags: Flag modifiers.
- * @wid: A width modifier.
- *
- * Return: The number of bytes stored to the buffer.
- */
-unsigned int print_neg_width(buffer_t *output, unsigned int printed,
-		unsigned char flags, int wid)
-{
-	unsigned int ret = 0;
-	char width = ' ';
-
-	if (NEG_FLAG == 1)
-	{
-		for (wid -= printed; wid > 0; wid--)
-			ret += _memcpy(output, &width, 1);
-	}
-
-	return (ret);
+	for (i = 0; i < flags; i++)
+		if (func_arr[i].c == s)
+			return (func_arr[i].f);
+	return (NULL);
 }
